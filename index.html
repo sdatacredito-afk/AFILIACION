@@ -1,0 +1,1025 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Ofertas Amazon, AliExpress, eBay y MercadoLibre + Pines Virtuales. Gift Cards y Recargas al instante." />
+  <title id="pageTitle">OfertasHoy — Multitienda</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            amazon:  { DEFAULT:'#FF9900', dark:'#e68a00' },
+            ali:     { DEFAULT:'#FF6A00', dark:'#cc5400' },
+            ebay:    { DEFAULT:'#E53238', dark:'#b8272c' },
+            ml:      { DEFAULT:'#FFE600', dark:'#cdb900' },
+            brand:   { 500:'#f97316', 600:'#ea580c' },
+          },
+          animation: {
+            'slide-up':  'slideUp .4s ease-out both',
+            'pulse-dot': 'pulseDot 1.8s ease-in-out infinite',
+            'toast-in':  'toastIn .3s ease-out both',
+          },
+          keyframes: {
+            slideUp:  { from:{ opacity:'0',transform:'translateY(20px)' }, to:{ opacity:'1',transform:'translateY(0)' } },
+            pulseDot: { '0%,100%':{ transform:'scale(1)',opacity:'.6' }, '50%':{ transform:'scale(1.35)',opacity:'1' } },
+            toastIn:  { from:{ opacity:'0',transform:'translateX(-50%) translateY(20px)' }, to:{ opacity:'1',transform:'translateX(-50%) translateY(0)' } },
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Skeleton shimmer */
+    .sk{background:linear-gradient(90deg,#1e293b 25%,#243044 50%,#1e293b 75%);
+        background-size:200% 100%;animation:shimmer 1.5s infinite}
+    @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
+    /* Scrollbar */
+    ::-webkit-scrollbar{width:5px}
+    ::-webkit-scrollbar-track{background:#0f172a}
+    ::-webkit-scrollbar-thumb{background:#334155;border-radius:3px}
+    .no-sb{scrollbar-width:none;-ms-overflow-style:none}
+    .no-sb::-webkit-scrollbar{display:none}
+
+    /* Product card lift */
+    .card{transition:transform .22s ease,box-shadow .22s ease}
+    .card:hover{transform:translateY(-5px);box-shadow:0 24px 48px rgba(0,0,0,.55)}
+
+    /* Badge pulse rojo (TENDENCIA VIRAL) */
+    .hot-badge{animation:badgePulse 2s ease-in-out infinite}
+    @keyframes badgePulse{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.4)}50%{box-shadow:0 0 0 8px rgba(239,68,68,0)}}
+
+    /* Viral border glow */
+    .viral-glow{box-shadow:0 0 0 1px rgba(239,68,68,.5),0 0 20px rgba(239,68,68,.2)}
+
+    /* Filter chips */
+    .filter-btn.active{background:#FF9900;border-color:#FF9900;color:#000;font-weight:700}
+
+    /* Store tabs */
+    .store-tab{transition:all .2s ease;cursor:pointer}
+    .store-tab.active{font-weight:700}
+    .store-tab[data-store="amazon"].active  {background:#FF9900;border-color:#FF9900;color:#000}
+    .store-tab[data-store="aliexpress"].active{background:#FF6A00;border-color:#FF6A00;color:#fff}
+    .store-tab[data-store="ebay"].active    {background:#E53238;border-color:#E53238;color:#fff}
+    .store-tab[data-store="ml"].active      {background:#FFE600;border-color:#FFE600;color:#000}
+
+    /* Pin tab */
+    .pin-tab.active{background:#FF9900;border-color:#FF9900;color:#000;font-weight:700}
+
+    /* Pin card hover */
+    .pin-card{transition:transform .2s ease,box-shadow .2s ease}
+    .pin-card:hover{transform:translateY(-4px);box-shadow:0 20px 40px rgba(0,0,0,.6)}
+
+    /* Pin utils (CDN Tailwind no soporta @apply en runtime) */
+    .pin-val{padding:.125rem .5rem;background:#1e293b;border:1px solid #334155;
+             border-radius:9999px;font-size:10px;font-weight:700;color:#cbd5e1}
+    .pin-cta{width:100%;padding:.6rem 0;border-radius:.75rem;color:#fff;
+             font-size:.75rem;font-weight:700;border:none;cursor:pointer;
+             transition:filter .15s;-webkit-tap-highlight-color:transparent}
+    .pin-cta:hover{filter:brightness(1.15)}
+    .pin-cta:active{transform:scale(.97)}
+
+    /* Section divider */
+    .divider-gradient{background:linear-gradient(90deg,transparent,rgba(255,153,0,.3),transparent)}
+
+    /* Search hint badge */
+    #searchHint{font-size:10px;font-weight:700;white-space:nowrap}
+
+    /* Toast */
+    #searchToast{transition:opacity .3s ease}
+  </style>
+</head>
+
+<body class="bg-slate-950 text-slate-100 min-h-screen antialiased">
+
+
+<!-- ═══════════════════════════════════════════════════════════════
+     HEADER — Buscador inteligente con redirección Amazon
+═══════════════════════════════════════════════════════════════ -->
+<header class="sticky top-0 z-50 bg-slate-950/95 backdrop-blur-md border-b border-slate-800/70">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex items-center gap-2 sm:gap-3 h-16">
+
+      <!-- Logo -->
+      <a href="#" class="flex items-center gap-1.5 shrink-0">
+        <span class="text-amazon font-black text-xl sm:text-2xl tracking-tight">O<span class="text-white">fertas</span></span>
+        <span class="bg-amazon text-black text-[9px] font-black px-1.5 py-0.5 rounded leading-none">HOY</span>
+      </a>
+
+      <!-- Nav -->
+      <nav class="hidden md:flex items-center gap-1 shrink-0">
+        <a href="#ofertas" class="text-xs font-semibold text-slate-300 hover:text-amazon px-3 py-1.5 rounded-lg hover:bg-slate-800 transition">
+          <span data-i18n="nav_deals">Ofertas</span>
+        </a>
+        <a href="#pines" class="text-xs font-semibold text-slate-300 hover:text-amazon px-3 py-1.5 rounded-lg hover:bg-slate-800 transition">
+          <span data-i18n="nav_pins">Pines Virtuales</span>
+        </a>
+      </nav>
+
+      <!-- ── BUSCADOR INTELIGENTE ───────────────────────────────────── -->
+      <div class="flex-1 flex items-center gap-2 min-w-0">
+
+        <!-- Input + hint de redirección -->
+        <div class="relative flex-1 min-w-0">
+          <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none shrink-0"
+               fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"/>
+          </svg>
+          <input id="searchInput" type="search" autocomplete="off"
+            class="w-full bg-slate-800/80 border border-slate-700 rounded-xl
+                   pl-10 pr-28 py-2.5 text-sm placeholder-slate-400
+                   focus:outline-none focus:ring-2 focus:ring-amazon focus:border-transparent transition-all"
+            data-i18n-placeholder="search_placeholder" />
+          <!-- Badge "→ Amazon" visible cuando no hay resultados locales -->
+          <span id="searchHint"
+            class="hidden absolute right-3 top-1/2 -translate-y-1/2
+                   text-amazon bg-slate-900 border border-amazon/30
+                   px-2 py-0.5 rounded-full pointer-events-none">
+            → Amazon
+          </span>
+        </div>
+
+        <!-- Botón buscar -->
+        <button id="searchBtn"
+          class="shrink-0 bg-amazon hover:bg-amazon-dark active:scale-95
+                 text-black text-xs font-black px-4 py-2.5 rounded-xl
+                 transition-all touch-manipulation">
+          <span data-i18n="search_btn">Buscar</span>
+        </button>
+
+      </div>
+      <!-- /Buscador -->
+
+      <!-- Contador -->
+      <div class="hidden sm:flex flex-col items-end shrink-0">
+        <span id="productCount" class="text-base font-black text-amazon leading-none">—</span>
+        <span class="text-[10px] text-slate-400 uppercase tracking-wider" data-i18n="deals_label">ofertas</span>
+      </div>
+
+    </div>
+  </div>
+</header>
+
+<!-- Toast de redirección -->
+<div id="searchToast"
+     class="hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-50
+            bg-amazon text-black font-bold text-sm px-5 py-3 rounded-2xl
+            shadow-2xl flex items-center gap-3 animate-toast-in">
+  <span>🔍</span>
+  <span id="searchToastMsg"></span>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════
+     HERO
+═══════════════════════════════════════════════════════════════ -->
+<section class="relative overflow-hidden bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 border-b border-slate-800 py-10 sm:py-12 px-4">
+  <div class="absolute -top-28 left-1/2 -translate-x-1/2 w-[700px] h-[350px] bg-amazon/5 rounded-full blur-3xl pointer-events-none"></div>
+  <div class="relative max-w-3xl mx-auto text-center">
+    <span class="inline-flex items-center gap-2 bg-slate-800 border border-slate-700 text-xs font-semibold text-slate-300 px-3 py-1.5 rounded-full mb-5">
+      <span class="w-2 h-2 bg-green-400 rounded-full animate-pulse-dot"></span>
+      <span data-i18n="live_pill">Actualizado automáticamente · Amazon + Más tiendas</span>
+    </span>
+    <h1 class="text-4xl sm:text-5xl font-black tracking-tight mb-3 leading-tight">
+      <span data-i18n="hero_line1">Deals del día con</span><br>
+      <span class="text-amazon" data-i18n="hero_highlight">hasta 70% OFF</span>
+    </h1>
+    <p class="text-slate-400 text-base sm:text-lg" data-i18n="hero_sub">Links directos con tracking de afiliado verificado.</p>
+    <p class="text-slate-500 text-sm mt-1" data-i18n="hero_note">Precios en USD · Disponibilidad sujeta a stock</p>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SECCIÓN PRINCIPAL: OFERTAS  (scroll-mt para ancla del nav)
+═══════════════════════════════════════════════════════════════ -->
+<div id="ofertas" class="scroll-mt-16">
+
+  <!-- ── TABS DE TIENDAS ─────────────────────────────────────── -->
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-1">
+    <div class="flex items-center gap-2 overflow-x-auto no-sb pb-1">
+
+      <button data-store="amazon"
+        class="store-tab active shrink-0 flex items-center gap-2
+               text-xs px-4 py-2.5 rounded-xl border border-amazon transition">
+        <svg class="w-3.5 h-3.5 shrink-0" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M21.5 14.1c-3.8 2.8-9.3 4.3-14 4.3-6.6 0-12.6-2.5-17.1-6.5-.4-.3 0-.7.4-.5 4.8 2.8 10.8 4.5 16.9 4.5 4.1 0 8.7-.9 12.9-2.6.6-.3 1.2.4.9.8z"/>
+        </svg>
+        <span data-i18n="store_amazon">Amazon</span>
+      </button>
+
+      <button data-store="aliexpress"
+        class="store-tab shrink-0 flex items-center gap-2
+               text-xs px-4 py-2.5 rounded-xl border border-slate-700 text-slate-300
+               hover:border-ali hover:text-ali transition">
+        <span class="text-sm leading-none">🛒</span>
+        <span data-i18n="store_ali">AliExpress</span>
+        <span class="text-[9px] bg-slate-700 px-1.5 py-0.5 rounded-full font-bold" data-i18n="soon_badge">Pronto</span>
+      </button>
+
+      <button data-store="ebay"
+        class="store-tab shrink-0 flex items-center gap-2
+               text-xs px-4 py-2.5 rounded-xl border border-slate-700 text-slate-300
+               hover:border-ebay hover:text-ebay transition">
+        <span class="text-sm leading-none">🏷️</span>
+        <span data-i18n="store_ebay">eBay</span>
+        <span class="text-[9px] bg-slate-700 px-1.5 py-0.5 rounded-full font-bold" data-i18n="soon_badge">Pronto</span>
+      </button>
+
+      <button data-store="ml"
+        class="store-tab shrink-0 flex items-center gap-2
+               text-xs px-4 py-2.5 rounded-xl border border-slate-700 text-slate-300
+               hover:border-ml hover:text-yellow-300 transition">
+        <span class="text-sm leading-none">🛍️</span>
+        <span data-i18n="store_ml">MercadoLibre</span>
+        <span class="text-[9px] bg-slate-700 px-1.5 py-0.5 rounded-full font-bold" data-i18n="soon_badge">Pronto</span>
+      </button>
+
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════
+       PANEL AMAZON (activo)
+  ══════════════════════════════════════════════════ -->
+  <div id="panel-amazon" class="store-panel">
+
+    <!-- Filter chips -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-1">
+      <div class="flex items-center gap-2 overflow-x-auto no-sb pb-2">
+        <button data-filter="all"   class="filter-btn active shrink-0 text-xs px-4 py-2 rounded-full border border-amazon transition" data-i18n="filter_all">Todos</button>
+        <button data-filter="top"   class="filter-btn shrink-0 text-xs px-4 py-2 rounded-full border border-slate-700 text-slate-300 hover:border-amazon hover:text-amazon transition" data-i18n="filter_top">Top -25%+</button>
+        <button data-filter="mega"  class="filter-btn shrink-0 text-xs px-4 py-2 rounded-full border border-slate-700 text-slate-300 hover:border-amazon hover:text-amazon transition" data-i18n="filter_mega">Mega -40%+</button>
+        <button data-filter="viral" class="filter-btn shrink-0 text-xs px-4 py-2 rounded-full border border-slate-700 text-slate-300 hover:border-amazon hover:text-amazon transition" data-i18n="filter_viral">Tendencia Viral</button>
+        <button data-filter="gamer" class="filter-btn shrink-0 text-xs px-4 py-2 rounded-full border border-slate-700 text-slate-300 hover:border-amazon hover:text-amazon transition" data-i18n="filter_gamer">Gaming</button>
+      </div>
+    </div>
+
+    <!-- Grid / estados -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-7">
+      <div id="loadingGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5"></div>
+
+      <div id="errorState" class="hidden text-center py-24">
+        <div class="text-6xl mb-5">⚠️</div>
+        <h2 class="text-xl font-bold mb-2" data-i18n="error_title">No se cargaron las ofertas</h2>
+        <p id="errorMsg" class="text-slate-400 text-sm mb-7 max-w-md mx-auto"></p>
+        <button onclick="init()" class="bg-amazon hover:bg-amazon-dark text-black font-bold px-7 py-3 rounded-xl transition active:scale-95" data-i18n="retry_btn">Reintentar</button>
+      </div>
+
+      <div id="emptyState" class="hidden text-center py-24">
+        <div class="text-6xl mb-5">🔍</div>
+        <h2 class="text-lg font-bold mb-1" data-i18n="empty_title">Sin resultados locales</h2>
+        <p class="text-slate-400 text-sm mb-6" data-i18n="empty_sub">No hay coincidencias en el catálogo local.</p>
+        <button id="emptySearchBtn"
+          class="bg-amazon hover:bg-amazon-dark text-black font-bold px-6 py-3 rounded-xl transition active:scale-95 text-sm">
+          <span data-i18n="search_on_amazon">Buscar en Amazon →</span>
+        </button>
+      </div>
+
+      <div id="productGrid" class="hidden grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5"></div>
+      <p id="lastUpdate" class="hidden text-center text-xs text-slate-600 mt-10 pb-4"></p>
+    </main>
+
+  </div><!-- /panel-amazon -->
+
+  <!-- ══════════════════════════════════════════════════
+       PANEL ALIEXPRESS — Placeholder
+  ══════════════════════════════════════════════════ -->
+  <div id="panel-aliexpress" class="store-panel hidden">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <!-- Banner de tienda -->
+      <div class="flex items-center gap-3 mb-6 p-4 rounded-2xl border border-ali/30 bg-ali/5">
+        <span class="text-3xl">🛒</span>
+        <div>
+          <p class="font-black text-base text-ali">AliExpress</p>
+          <p class="text-xs text-slate-400" data-i18n="store_coming_desc">Integración de ofertas en desarrollo. Pronto sincronizado automáticamente.</p>
+        </div>
+      </div>
+      <!-- 8 placeholders -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+        <!-- repite 8 veces con JS — aquí van los placeholders estáticos -->
+      </div>
+      <div id="aliPlaceholders" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5"></div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════
+       PANEL EBAY — Placeholder
+  ══════════════════════════════════════════════════ -->
+  <div id="panel-ebay" class="store-panel hidden">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div class="flex items-center gap-3 mb-6 p-4 rounded-2xl border border-ebay/30 bg-ebay/5">
+        <span class="text-3xl">🏷️</span>
+        <div>
+          <p class="font-black text-base text-ebay">eBay</p>
+          <p class="text-xs text-slate-400" data-i18n="store_coming_desc">Integración de ofertas en desarrollo. Pronto sincronizado automáticamente.</p>
+        </div>
+      </div>
+      <div id="ebayPlaceholders" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5"></div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════
+       PANEL MERCADOLIBRE — Placeholder
+  ══════════════════════════════════════════════════ -->
+  <div id="panel-ml" class="store-panel hidden">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div class="flex items-center gap-3 mb-6 p-4 rounded-2xl border border-ml/30 bg-ml/5">
+        <span class="text-3xl">🛍️</span>
+        <div>
+          <p class="font-black text-base text-yellow-300">MercadoLibre</p>
+          <p class="text-xs text-slate-400" data-i18n="store_coming_desc">Integración de ofertas en desarrollo. Pronto sincronizado automáticamente.</p>
+        </div>
+      </div>
+      <div id="mlPlaceholders" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5"></div>
+    </div>
+  </div>
+
+</div><!-- /ofertas -->
+
+
+<!-- ═══════════════════════════════════════════════════════════════
+     DIVISOR
+═══════════════════════════════════════════════════════════════ -->
+<div class="relative py-10 px-4">
+  <div class="divider-gradient h-px w-full max-w-5xl mx-auto mb-8"></div>
+  <div class="text-center">
+    <span class="inline-flex items-center gap-3 text-amazon font-black text-2xl sm:text-3xl tracking-tight">
+      <span>🎮</span>
+      <span data-i18n="pins_title">Pines Virtuales</span>
+      <span>🎁</span>
+    </span>
+    <p class="text-slate-400 text-sm mt-2" data-i18n="pins_sub">Gift Cards &amp; Recargas Digitales al Instante</p>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SECCIÓN: PINES VIRTUALES
+═══════════════════════════════════════════════════════════════ -->
+<section id="pines" class="scroll-mt-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
+
+  <!-- Tabs -->
+  <div class="flex items-center gap-2 overflow-x-auto no-sb pb-3 mb-7">
+    <button data-pin-tab="streaming" class="pin-tab active shrink-0 flex items-center gap-2 text-xs font-semibold px-4 py-2.5 rounded-full border border-amazon transition">
+      <span>📺</span><span data-i18n="tab_streaming">Streaming</span>
+    </button>
+    <button data-pin-tab="gaming" class="pin-tab shrink-0 flex items-center gap-2 text-xs font-semibold px-4 py-2.5 rounded-full border border-slate-700 text-slate-300 hover:border-amazon hover:text-amazon transition">
+      <span>🎮</span><span data-i18n="tab_gaming">Gaming</span>
+    </button>
+    <button data-pin-tab="coins" class="pin-tab shrink-0 flex items-center gap-2 text-xs font-semibold px-4 py-2.5 rounded-full border border-slate-700 text-slate-300 hover:border-amazon hover:text-amazon transition">
+      <span>💰</span><span data-i18n="tab_coins">Monedas Virtuales</span>
+    </button>
+    <button data-pin-tab="software" class="pin-tab shrink-0 flex items-center gap-2 text-xs font-semibold px-4 py-2.5 rounded-full border border-slate-700 text-slate-300 hover:border-amazon hover:text-amazon transition">
+      <span>💻</span><span data-i18n="tab_software">Software</span>
+    </button>
+  </div>
+
+  <!-- Streaming -->
+  <div id="tab-streaming" class="pin-panel grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+    <div class="pin-card bg-slate-900 border border-slate-800/60 rounded-2xl overflow-hidden flex flex-col">
+      <div class="h-24 flex items-center justify-center" style="background:linear-gradient(135deg,#E50914,#831010)"><span class="text-white font-black text-xl drop-shadow">NETFLIX</span></div>
+      <div class="p-3 flex flex-col flex-1 gap-2"><p class="text-xs font-bold text-slate-100">Netflix Gift Card</p><div class="flex flex-wrap gap-1"><span class="pin-val">$10</span><span class="pin-val">$25</span><span class="pin-val">$50</span></div><button class="mt-auto pin-cta" style="background:#dc2626" data-i18n="coming_soon">Próximamente</button></div>
+    </div>
+    <div class="pin-card bg-slate-900 border border-slate-800/60 rounded-2xl overflow-hidden flex flex-col">
+      <div class="h-24 flex items-center justify-center" style="background:linear-gradient(135deg,#1DB954,#158a3e)"><span class="text-white font-black text-xl drop-shadow">SPOTIFY</span></div>
+      <div class="p-3 flex flex-col flex-1 gap-2"><p class="text-xs font-bold text-slate-100">Spotify Premium</p><div class="flex flex-wrap gap-1"><span class="pin-val">1 mes</span><span class="pin-val">3 meses</span></div><button class="mt-auto pin-cta" style="background:#16a34a" data-i18n="coming_soon">Próximamente</button></div>
+    </div>
+    <div class="pin-card bg-slate-900 border border-slate-800/60 rounded-2xl overflow-hidden flex flex-col">
+      <div class="h-24 flex items-center justify-center" style="background:linear-gradient(135deg,#00A8E0,#006fa8)"><span class="text-white font-black text-xl drop-shadow">PRIME</span></div>
+      <div class="p-3 flex flex-col flex-1 gap-2"><p class="text-xs font-bold text-slate-100">Amazon Prime</p><div class="flex flex-wrap gap-1"><span class="pin-val">1 mes</span><span class="pin-val">Anual</span></div><button class="mt-auto pin-cta" style="background:#2563eb" data-i18n="coming_soon">Próximamente</button></div>
+    </div>
+    <div class="pin-card bg-slate-900 border border-slate-800/60 rounded-2xl overflow-hidden flex flex-col">
+      <div class="h-24 flex items-center justify-center" style="background:linear-gradient(135deg,#113CCF,#0a2590)"><span class="text-white font-black text-xl drop-shadow">DISNEY+</span></div>
+      <div class="p-3 flex flex-col flex-1 gap-2"><p class="text-xs font-bold text-slate-100">Disney+ Gift Card</p><div class="flex flex-wrap gap-1"><span class="pin-val">$20</span><span class="pin-val">$50</span></div><button class="mt-auto pin-cta" style="background:#1d4ed8" data-i18n="coming_soon">Próximamente</button></div>
+    </div>
+    <div class="pin-card bg-slate-900 border border-slate-800/60 rounded-2xl overflow-hidden flex flex-col">
+      <div class="h-24 flex items-center justify-center" style="background:linear-gradient(135deg,#8B5CF6,#5b21b6)"><span class="text-white font-black text-xl drop-shadow">MAX</span></div>
+      <div class="p-3 flex flex-col flex-1 gap-2"><p class="text-xs font-bold text-slate-100">Max / HBO</p><div class="flex flex-wrap gap-1"><span class="pin-val">1 mes</span><span class="pin-val">6 meses</span></div><button class="mt-auto pin-cta" style="background:#7c3aed" data-i18n="coming_soon">Próximamente</button></div>
+    </div>
+    <div class="pin-card bg-slate-900 border border-slate-800/60 rounded-2xl overflow-hidden flex flex-col">
+      <div class="h-24 flex items-center justify-center" style="background:linear-gradient(135deg,#1c1c1e,#3a3a3c)"><span class="text-white font-black text-xl drop-shadow"> TV+</span></div>
+      <div class="p-3 flex flex-col flex-1 gap-2"><p class="text-xs font-bold text-slate-100">Apple TV+</p><div class="flex flex-wrap gap-1"><span class="pin-val">$25</span><span class="pin-val">$50</span></div><button class="mt-auto pin-cta" style="background:#475569" data-i18n="coming_soon">Próximamente</button></div>
+    </div>
+  </div>
+
+  <!-- Gaming -->
+  <div id="tab-gaming" class="pin-panel hidden grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+    <div class="pin-card bg-slate-900 border border-slate-800/60 rounded-2xl overflow-hidden flex flex-col">
+      <div class="h-24 flex flex-col items-center justify-center gap-1" style="background:linear-gradient(135deg,#003087,#0050b3)"><span class="text-white font-black text-lg drop-shadow">PlayStation</span><span class="text-blue-200 text-[10px] font-bold uppercase tracking-widest">Store</span></div>
+      <div class="p-3 flex flex-col flex-1 gap-2"><p class="text-xs font-bold text-slate-100">PS Store Card</p><div class="flex flex-wrap gap-1"><span class="pin-val">$10</span><span class="pin-val">$25</span><span class="pin-val">$50</span></div><button class="mt-auto pin-cta" style="background:#1d4ed8" data-i18n="coming_soon">Próximamente</button></div>
+    </div>
+    <div class="pin-card bg-slate-900 border border-slate-800/60 rounded-2xl overflow-hidden flex flex-col">
+      <div class="h-24 flex flex-col items-center justify-center gap-1" style="background:linear-gradient(135deg,#107C10,#0a5a0a)"><span class="text-white font-black text-lg drop-shadow">Xbox</span><span class="text-green-200 text-[10px] font-bold uppercase tracking-widest">Game Pass</span></div>
+      <div class="p-3 flex flex-col flex-1 gap-2"><p class="text-xs font-bold text-slate-100">Xbox / Game Pass</p><div class="flex flex-wrap gap-1"><span class="pin-val">1 mes</span><span class="pin-val">3 meses</span></div><button class="mt-auto pin-cta" style="background:#15803d" data-i18n="coming_soon">Próximamente</button></div>
+    </div>
+    <div class="pin-card bg-slate-900 border border-slate-800/60 rounded-2xl overflow-hidden flex flex-col">
+      <div class="h-24 flex flex-col items-center justify-center gap-1" style="background:linear-gradient(135deg,#E60012,#9e000d)"><span class="text-white font-black text-lg drop-shadow">Nintendo</span><span class="text-red-200 text-[10px] font-bold uppercase tracking-widest">eShop</span></div>
+      <div class="p-3 flex flex-col flex-1 gap-2"><p class="text-xs font-bold text-slate-100">Nintendo eShop</p><div class="flex flex-wrap gap-1"><span class="pin-val">$10</span><span class="pin-val">$20</span><span class="pin-val">$35</span></div><button class="mt-auto pin-cta" style="background:#b91c1c" data-i18n="coming_soon">Próximamente</button></div>
+    </div>
+    <div class="pin-card bg-slate-900 border border-slate-800/60 rounded-2xl overflow-hidden flex flex-col">
+      <div class="h-24 flex flex-col items-center justify-center gap-1" style="background:linear-gradient(135deg,#171A21,#2a475e)"><span class="text-white font-black text-lg drop-shadow">Steam</span><span class="text-slate-300 text-[10px] font-bold uppercase tracking-widest">Wallet</span></div>
+      <div class="p-3 flex flex-col flex-1 gap-2"><p class="text-xs font-bold text-slate-100">Steam Wallet</p><div class="flex flex-wrap gap-1"><span class="pin-val">$10</span><span class="pin-val">$20</span><span class="pin-val">$50</span></div><button class="mt-auto pin-cta" style="background:#475569" data-i18n="coming_soon">Próximamente</button></div>
+    </div>
+    <div class="pin-card bg-slate-900 border border-slate-800/60 rounded-2xl overflow-hidden flex flex-col">
+      <div class="h-24 flex flex-col items-center justify-center gap-1" style="background:linear-gradient(135deg,#F7941D,#c9720d)"><span class="text-white font-black text-lg drop-shadow">EA Play</span><span class="text-orange-100 text-[10px] font-bold uppercase tracking-widest">Pro</span></div>
+      <div class="p-3 flex flex-col flex-1 gap-2"><p class="text-xs font-bold text-slate-100">EA Play Pro</p><div class="flex flex-wrap gap-1"><span class="pin-val">1 mes</span><span class="pin-val">Anual</span></div><button class="mt-auto pin-cta" style="background:#c2410c" data-i18n="coming_soon">Próximamente</button></div>
+    </div>
+    <div class="pin-card bg-slate-900 border border-slate-800/60 rounded-2xl overflow-hidden flex flex-col">
+      <div class="h-24 flex flex-col items-center justify-center gap-1" style="background:linear-gradient(135deg,#e53e3e,#9b2c2c)"><span class="text-white font-black text-lg drop-shadow">Roblox</span><span class="text-red-200 text-[10px] font-bold uppercase tracking-widest">Gift Card</span></div>
+      <div class="p-3 flex flex-col flex-1 gap-2"><p class="text-xs font-bold text-slate-100">Roblox Gift Card</p><div class="flex flex-wrap gap-1"><span class="pin-val">$10</span><span class="pin-val">$25</span></div><button class="mt-auto pin-cta" style="background:#dc2626" data-i18n="coming_soon">Próximamente</button></div>
+    </div>
+  </div>
+
+  <!-- Monedas Virtuales -->
+  <div id="tab-coins" class="pin-panel hidden grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+    <div class="pin-card bg-slate-900 border border-slate-800/60 rounded-2xl overflow-hidden flex flex-col">
+      <div class="h-24 flex flex-col items-center justify-center gap-1" style="background:linear-gradient(135deg,#44D62C,#2d9e1a)"><span class="text-white font-black text-lg drop-shadow">RAZER</span><span class="text-green-100 text-[10px] font-bold uppercase tracking-widest">Gold</span></div>
+      <div class="p-3 flex flex-col flex-1 gap-2"><p class="text-xs font-bold text-slate-100">Razer Gold</p><div class="flex flex-wrap gap-1"><span class="pin-val">$5</span><span class="pin-val">$10</span><span class="pin-val">$25</span></div><button class="mt-auto pin-cta" style="background:#15803d" data-i18n="coming_soon">Próximamente</button></div>
+    </div>
+    <div class="pin-card bg-slate-900 border border-slate-800/60 rounded-2xl overflow-hidden flex flex-col">
+      <div class="h-24 flex flex-col items-center justify-center gap-1" style="background:linear-gradient(135deg,#FF6600,#cc4f00)"><span class="text-white font-black text-lg drop-shadow">FREE FIRE</span><span class="text-orange-100 text-[10px] font-bold uppercase tracking-widest">Diamonds</span></div>
+      <div class="p-3 flex flex-col flex-1 gap-2"><p class="text-xs font-bold text-slate-100">Free Fire Diamonds</p><div class="flex flex-wrap gap-1"><span class="pin-val">100💎</span><span class="pin-val">500💎</span></div><button class="mt-auto pin-cta" style="background:#c2410c" data-i18n="coming_soon">Próximamente</button></div>
+    </div>
+    <div class="pin-card bg-slate-900 border border-slate-800/60 rounded-2xl overflow-hidden flex flex-col">
+      <div class="h-24 flex flex-col items-center justify-center gap-1" style="background:linear-gradient(135deg,#e53e3e,#742a2a)"><span class="text-white font-black text-lg drop-shadow">ROBLOX</span><span class="text-red-200 text-[10px] font-bold uppercase tracking-widest">Robux</span></div>
+      <div class="p-3 flex flex-col flex-1 gap-2"><p class="text-xs font-bold text-slate-100">Robux</p><div class="flex flex-wrap gap-1"><span class="pin-val">400R$</span><span class="pin-val">800R$</span></div><button class="mt-auto pin-cta" style="background:#dc2626" data-i18n="coming_soon">Próximamente</button></div>
+    </div>
+    <div class="pin-card bg-slate-900 border border-slate-800/60 rounded-2xl overflow-hidden flex flex-col">
+      <div class="h-24 flex flex-col items-center justify-center gap-1" style="background:linear-gradient(135deg,#0078F2,#0050a0)"><span class="text-white font-black text-lg drop-shadow">FORTNITE</span><span class="text-blue-200 text-[10px] font-bold uppercase tracking-widest">V-Bucks</span></div>
+      <div class="p-3 flex flex-col flex-1 gap-2"><p class="text-xs font-bold text-slate-100">V-Bucks</p><div class="flex flex-wrap gap-1"><span class="pin-val">1000V</span><span class="pin-val">2800V</span></div><button class="mt-auto pin-cta" style="background:#1d4ed8" data-i18n="coming_soon">Próximamente</button></div>
+    </div>
+    <div class="pin-card bg-slate-900 border border-slate-800/60 rounded-2xl overflow-hidden flex flex-col">
+      <div class="h-24 flex flex-col items-center justify-center gap-1" style="background:linear-gradient(135deg,#FF4500,#b53100)"><span class="text-white font-black text-base drop-shadow text-center leading-tight">MOBILE<br>LEGENDS</span></div>
+      <div class="p-3 flex flex-col flex-1 gap-2"><p class="text-xs font-bold text-slate-100">Diamonds MLBB</p><div class="flex flex-wrap gap-1"><span class="pin-val">86💎</span><span class="pin-val">172💎</span></div><button class="mt-auto pin-cta" style="background:#c2410c" data-i18n="coming_soon">Próximamente</button></div>
+    </div>
+    <div class="pin-card bg-slate-900 border border-slate-800/60 rounded-2xl overflow-hidden flex flex-col">
+      <div class="h-24 flex flex-col items-center justify-center gap-1" style="background:linear-gradient(135deg,#4A90D9,#2c6199)"><span class="text-white font-black text-base drop-shadow text-center leading-tight">CLASH<br>OF CLANS</span></div>
+      <div class="p-3 flex flex-col flex-1 gap-2"><p class="text-xs font-bold text-slate-100">Gems CoC</p><div class="flex flex-wrap gap-1"><span class="pin-val">500💎</span><span class="pin-val">1200💎</span></div><button class="mt-auto pin-cta" style="background:#1d4ed8" data-i18n="coming_soon">Próximamente</button></div>
+    </div>
+  </div>
+
+  <!-- Software -->
+  <div id="tab-software" class="pin-panel hidden grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+    <div class="pin-card bg-slate-900 border border-slate-800/60 rounded-2xl overflow-hidden flex flex-col">
+      <div class="h-24 flex flex-col items-center justify-center gap-1" style="background:linear-gradient(135deg,#D83B01,#9e2b01)"><span class="text-white font-black text-sm drop-shadow text-center leading-tight">Microsoft<br>365</span></div>
+      <div class="p-3 flex flex-col flex-1 gap-2"><p class="text-xs font-bold text-slate-100">Microsoft 365</p><div class="flex flex-wrap gap-1"><span class="pin-val">Personal</span><span class="pin-val">Family</span></div><button class="mt-auto pin-cta" style="background:#c2410c" data-i18n="coming_soon">Próximamente</button></div>
+    </div>
+    <div class="pin-card bg-slate-900 border border-slate-800/60 rounded-2xl overflow-hidden flex flex-col">
+      <div class="h-24 flex flex-col items-center justify-center gap-1" style="background:linear-gradient(135deg,#FF0000,#a30000)"><span class="text-white font-black text-sm drop-shadow text-center leading-tight">Adobe<br>Creative</span></div>
+      <div class="p-3 flex flex-col flex-1 gap-2"><p class="text-xs font-bold text-slate-100">Adobe CC</p><div class="flex flex-wrap gap-1"><span class="pin-val">1 mes</span><span class="pin-val">Anual</span></div><button class="mt-auto pin-cta" style="background:#b91c1c" data-i18n="coming_soon">Próximamente</button></div>
+    </div>
+    <div class="pin-card bg-slate-900 border border-slate-800/60 rounded-2xl overflow-hidden flex flex-col">
+      <div class="h-24 flex flex-col items-center justify-center gap-1" style="background:linear-gradient(135deg,#4687FF,#1a4fcc)"><span class="text-white font-black text-lg drop-shadow">NordVPN</span><span class="text-blue-200 text-[10px] font-bold uppercase tracking-widest">Premium</span></div>
+      <div class="p-3 flex flex-col flex-1 gap-2"><p class="text-xs font-bold text-slate-100">NordVPN</p><div class="flex flex-wrap gap-1"><span class="pin-val">1 año</span><span class="pin-val">2 años</span></div><button class="mt-auto pin-cta" style="background:#1d4ed8" data-i18n="coming_soon">Próximamente</button></div>
+    </div>
+    <div class="pin-card bg-slate-900 border border-slate-800/60 rounded-2xl overflow-hidden flex flex-col">
+      <div class="h-24 flex flex-col items-center justify-center gap-1" style="background:linear-gradient(135deg,#FFC000,#cc9900)"><span class="text-slate-900 font-black text-lg drop-shadow">NORTON</span><span class="text-yellow-900 text-[10px] font-bold uppercase tracking-widest">360</span></div>
+      <div class="p-3 flex flex-col flex-1 gap-2"><p class="text-xs font-bold text-slate-100">Norton 360</p><div class="flex flex-wrap gap-1"><span class="pin-val">1 año</span><span class="pin-val">3 disp.</span></div><button class="mt-auto pin-cta" style="background:#a16207" data-i18n="coming_soon">Próximamente</button></div>
+    </div>
+    <div class="pin-card bg-slate-900 border border-slate-800/60 rounded-2xl overflow-hidden flex flex-col">
+      <div class="h-24 flex flex-col items-center justify-center gap-1" style="background:linear-gradient(135deg,#7D2AE8,#4f1a9e)"><span class="text-white font-black text-lg drop-shadow">CANVA</span><span class="text-purple-200 text-[10px] font-bold uppercase tracking-widest">Pro</span></div>
+      <div class="p-3 flex flex-col flex-1 gap-2"><p class="text-xs font-bold text-slate-100">Canva Pro</p><div class="flex flex-wrap gap-1"><span class="pin-val">1 mes</span><span class="pin-val">1 año</span></div><button class="mt-auto pin-cta" style="background:#7c3aed" data-i18n="coming_soon">Próximamente</button></div>
+    </div>
+    <div class="pin-card bg-slate-900 border border-slate-800/60 rounded-2xl overflow-hidden flex flex-col">
+      <div class="h-24 flex flex-col items-center justify-center gap-1" style="background:linear-gradient(135deg,#DA3940,#9e1f25)"><span class="text-white font-black text-sm drop-shadow text-center leading-tight">EXPRESS<br>VPN</span></div>
+      <div class="p-3 flex flex-col flex-1 gap-2"><p class="text-xs font-bold text-slate-100">ExpressVPN</p><div class="flex flex-wrap gap-1"><span class="pin-val">1 mes</span><span class="pin-val">1 año</span></div><button class="mt-auto pin-cta" style="background:#b91c1c" data-i18n="coming_soon">Próximamente</button></div>
+    </div>
+  </div>
+
+</section><!-- /pines -->
+
+
+<!-- ═══════════════════════════════════════════════════════════════
+     FOOTER
+═══════════════════════════════════════════════════════════════ -->
+<footer class="border-t border-slate-800 py-8 px-4 text-center">
+  <p class="text-xs text-slate-500 max-w-xl mx-auto" data-i18n="footer_text">
+    Somos participantes del Programa de Afiliados de Amazon Services LLC
+    (tag: <code class="text-slate-400">dawi01-20</code>).
+    Los precios y la disponibilidad pueden variar.
+  </p>
+</footer>
+
+
+<!-- ═══════════════════════════════════════════════════════════════
+     JAVASCRIPT PRINCIPAL
+     Orden de ejecucion: i18n → placeholders → init() → eventos
+═══════════════════════════════════════════════════════════════ -->
+<script>
+(() => {
+  'use strict';
+
+  // ───────────────────────────────────────────────────────────────
+  // CONSTANTES
+  // ───────────────────────────────────────────────────────────────
+  const AFFILIATE_TAG  = 'dawi01-20';
+  const JSON_PATH      = './ofertas.json';   // ruta relativa dentro de AFILIACION/
+
+  // ───────────────────────────────────────────────────────────────
+  // DICCIONARIO i18n  ES (default) / EN
+  // ───────────────────────────────────────────────────────────────
+  const LANG = {
+    es: {
+      page_title:         'OfertasHoy — Multitienda',
+      nav_deals:          'Ofertas',
+      nav_pins:           'Pines Virtuales',
+      search_placeholder: 'Buscar en ES o EN… (Enter para buscar)',
+      search_btn:         'Buscar',
+      search_on_amazon:   'Buscar en Amazon →',
+      deals_label:        'ofertas',
+      live_pill:          'Actualizado automáticamente · Amazon + Más tiendas',
+      hero_line1:         'Deals del día con',
+      hero_highlight:     'hasta 70% OFF',
+      hero_sub:           'Links directos con tracking de afiliado verificado.',
+      hero_note:          'Precios en USD · Disponibilidad sujeta a stock',
+      filter_all:         'Todos',
+      filter_top:         'Top -25%+',
+      filter_mega:        'Mega -40%+',
+      filter_viral:       'Tendencia Viral',
+      filter_gamer:       'Gaming',
+      store_amazon:       'Amazon',
+      store_ali:          'AliExpress',
+      store_ebay:         'eBay',
+      store_ml:           'MercadoLibre',
+      soon_badge:         'Pronto',
+      store_coming_desc:  'Integración de ofertas en desarrollo. Pronto sincronizado automáticamente.',
+      store_coming_title: 'Próximamente',
+      store_coming_sub:   'Ofertas Sincronizadas',
+      badge_TENDENCIA_VIRAL: 'TENDENCIA VIRAL',
+      badge_GAMER_PICK:      'GAMER PICK',
+      badge_SUPER_OFERTA:    'SUPER OFERTA',
+      badge_TECH_DEAL:       'TECH DEAL',
+      badge_OFERTA_DEL_DIA:  'OFERTA DEL DIA',
+      btn_amazon:         'Ver en Amazon',
+      error_title:        'No se cargaron las ofertas',
+      retry_btn:          'Reintentar',
+      empty_title:        'Sin resultados locales',
+      empty_sub:          'No hay coincidencias en el catálogo local.',
+      updated_label:      'Actualizado:',
+      demo_label:         '· MODO DEMO',
+      pins_title:         'Pines Virtuales',
+      pins_sub:           'Gift Cards & Recargas Digitales al Instante',
+      tab_streaming:      'Streaming',
+      tab_gaming:         'Gaming',
+      tab_coins:          'Monedas Virtuales',
+      tab_software:       'Software',
+      coming_soon:        'Próximamente',
+      footer_text:        'Somos participantes del Programa de Afiliados de Amazon Services LLC (tag: dawi01-20). Los precios y la disponibilidad pueden variar.',
+      asin_label:         'ASIN:',
+      score_label:        'Score:',
+      redirect_toast:     'Buscando en Amazon →',
+    },
+    en: {
+      page_title:         'DealsToday — Multistore',
+      nav_deals:          'Deals',
+      nav_pins:           'Virtual Pins',
+      search_placeholder: 'Search in EN or ES… (Enter to search)',
+      search_btn:         'Search',
+      search_on_amazon:   'Search on Amazon →',
+      deals_label:        'deals',
+      live_pill:          'Auto-updated · Amazon + More stores',
+      hero_line1:         "Today's deals with",
+      hero_highlight:     'up to 70% OFF',
+      hero_sub:           'Direct links with verified affiliate tracking.',
+      hero_note:          'Prices in USD · Availability subject to stock',
+      filter_all:         'All',
+      filter_top:         'Top -25%+',
+      filter_mega:        'Mega -40%+',
+      filter_viral:       'Viral Trend',
+      filter_gamer:       'Gaming',
+      store_amazon:       'Amazon',
+      store_ali:          'AliExpress',
+      store_ebay:         'eBay',
+      store_ml:           'MercadoLibre',
+      soon_badge:         'Soon',
+      store_coming_desc:  'Deal integration in development. Coming soon, synced automatically.',
+      store_coming_title: 'Coming Soon',
+      store_coming_sub:   'Synchronized Deals',
+      badge_TENDENCIA_VIRAL: 'VIRAL TREND',
+      badge_GAMER_PICK:      'GAMER PICK',
+      badge_SUPER_OFERTA:    'SUPER DEAL',
+      badge_TECH_DEAL:       'TECH DEAL',
+      badge_OFERTA_DEL_DIA:  'DAILY DEAL',
+      btn_amazon:         'View on Amazon',
+      error_title:        'Could not load deals',
+      retry_btn:          'Retry',
+      empty_title:        'No local results',
+      empty_sub:          'No matches found in the local catalog.',
+      updated_label:      'Updated:',
+      demo_label:         '· DEMO MODE',
+      pins_title:         'Virtual Pins',
+      pins_sub:           'Gift Cards & Digital Recharges Instantly',
+      tab_streaming:      'Streaming',
+      tab_gaming:         'Gaming',
+      tab_coins:          'Virtual Coins',
+      tab_software:       'Software',
+      coming_soon:        'Coming Soon',
+      footer_text:        'We are participants in the Amazon Services LLC Associates Program (tag: dawi01-20). Prices and availability may vary.',
+      asin_label:         'ASIN:',
+      score_label:        'Score:',
+      redirect_toast:     'Searching on Amazon →',
+    }
+  };
+
+  // ───────────────────────────────────────────────────────────────
+  // DETECCIÓN AUTOMÁTICA DE IDIOMA
+  // ───────────────────────────────────────────────────────────────
+  const userLang = (navigator.languages?.[0] || navigator.language || 'es').toLowerCase();
+  const isEN     = userLang.startsWith('en');
+  const T        = isEN ? LANG.en : LANG.es;
+
+  document.documentElement.lang = isEN ? 'en' : 'es';
+  document.title = T.page_title;
+
+  function applyI18n() {
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+      const v = T[el.dataset.i18n];
+      if (v !== undefined) el.textContent = v;
+    });
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+      const v = T[el.dataset.i18nPlaceholder];
+      if (v !== undefined) el.placeholder = v;
+    });
+  }
+
+  // ───────────────────────────────────────────────────────────────
+  // ESTADO DE LA APP
+  // ───────────────────────────────────────────────────────────────
+  let allProducts  = [];
+  let activeFilter = 'all';
+  let searchQuery  = '';
+  let lastSearchQuery = ''; // para el botón del estado vacío
+
+  // DOM refs
+  const $grid        = document.getElementById('productGrid');
+  const $loadingGrid = document.getElementById('loadingGrid');
+  const $error       = document.getElementById('errorState');
+  const $errorMsg    = document.getElementById('errorMsg');
+  const $empty       = document.getElementById('emptyState');
+  const $count       = document.getElementById('productCount');
+  const $lastUpdate  = document.getElementById('lastUpdate');
+  const $search      = document.getElementById('searchInput');
+  const $searchBtn   = document.getElementById('searchBtn');
+  const $searchHint  = document.getElementById('searchHint');
+  const $toast       = document.getElementById('searchToast');
+  const $toastMsg    = document.getElementById('searchToastMsg');
+  const $filterBtns  = document.querySelectorAll('.filter-btn');
+  const $emptySearchBtn = document.getElementById('emptySearchBtn');
+
+  // ───────────────────────────────────────────────────────────────
+  // UTILIDADES
+  // ───────────────────────────────────────────────────────────────
+  const esc = s => typeof s !== 'string' ? '' :
+    s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+     .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+
+  function showToast(msg, ms = 2500) {
+    $toastMsg.textContent = msg;
+    $toast.classList.remove('hidden');
+    setTimeout(() => $toast.classList.add('hidden'), ms);
+  }
+
+  function renderSkeletons(n = 8) {
+    $loadingGrid.innerHTML = Array.from({ length: n }, () => `
+      <div class="bg-slate-900 border border-slate-800/60 rounded-2xl overflow-hidden">
+        <div class="sk aspect-square w-full"></div>
+        <div class="p-4 space-y-3">
+          <div class="sk h-3.5 rounded-lg w-4/5"></div>
+          <div class="sk h-3.5 rounded-lg w-3/5"></div>
+          <div class="sk h-5 rounded-lg w-2/5 mt-1"></div>
+          <div class="sk h-11 rounded-xl w-full mt-3"></div>
+        </div>
+      </div>`).join('');
+  }
+
+  function translateBadge(badge) {
+    return T['badge_' + (badge || '').replace(/ /g, '_')] || badge || '';
+  }
+
+  // ───────────────────────────────────────────────────────────────
+  // RENDER DE TARJETA DE PRODUCTO AMAZON
+  // ───────────────────────────────────────────────────────────────
+  function renderCard(p, idx) {
+    const pct      = p.descuento_pct || parseInt((p.descuento||'').replace(/\D/g,''))||0;
+    const badge    = p.badge_tipo || '';
+    const isViral  = badge === 'TENDENCIA VIRAL';
+    const isGamer  = badge === 'GAMER PICK';
+    const isMega   = pct >= 40;
+    const isHot    = pct >= 25 && !isMega;
+    const hasOld   = p.precio_antes && p.precio_antes !== p.precio_actual;
+    const delay    = Math.min(idx * 40, 350);
+
+    const badgeColor    = isMega || isViral ? 'bg-red-600 hot-badge' : isHot ? 'bg-brand-500' : 'bg-slate-600';
+    const viralBorder   = isViral ? 'viral-glow border-red-500/40' : 'border-slate-800/60';
+    const catBadgeCls   = isViral
+      ? 'bg-red-500/15 text-red-400 border-red-500/30'
+      : isGamer
+        ? 'bg-violet-500/15 text-violet-400 border-violet-500/30'
+        : 'bg-yellow-400/10 text-yellow-400 border-yellow-400/20';
+
+    return `
+      <article class="card group bg-slate-900 border ${viralBorder} rounded-2xl overflow-hidden flex flex-col animate-slide-up"
+               style="animation-delay:${delay}ms" data-pct="${pct}" data-badge="${esc(badge)}">
+
+        <a href="${esc(p.url)}" target="_blank" rel="noopener sponsored"
+           class="relative block bg-white aspect-square overflow-hidden shrink-0">
+          <img src="${esc(p.imagen)}" alt="${esc(p.titulo)}"
+               class="w-full h-full object-contain p-4 group-hover:scale-[1.06] transition-transform duration-300"
+               loading="lazy"
+               onerror="this.onerror=null;this.src='https://placehold.co/400x400/1e293b/475569?text=Amazon'"/>
+          ${pct ? `<div class="absolute top-2.5 left-2.5 ${badgeColor} text-white text-xs font-black px-2.5 py-1 rounded-lg shadow-lg leading-none">-${pct}%</div>` : ''}
+          ${isViral ? '<div class="absolute top-2.5 right-2.5 text-xl drop-shadow">🔥</div>' :
+            isMega  ? '<div class="absolute top-2.5 right-2.5 text-xl drop-shadow">💥</div>' :
+            isGamer ? '<div class="absolute top-2.5 right-2.5 text-xl drop-shadow">🎮</div>' : ''}
+        </a>
+
+        <div class="p-4 flex flex-col flex-1 gap-2.5">
+          <div class="flex items-center justify-between gap-1">
+            <span class="inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded-full border ${catBadgeCls}">
+              ${esc(translateBadge(badge))}
+            </span>
+            ${p.puntuacion ? `<span class="text-[9px] text-slate-600">${T.score_label} ${p.puntuacion}</span>` : ''}
+          </div>
+          <h2 class="text-sm font-semibold leading-snug line-clamp-2 text-slate-100 min-h-[2.6rem] flex-1">
+            ${esc(p.titulo)}
+          </h2>
+          <div class="flex items-end gap-2 flex-wrap mt-auto">
+            <span class="text-2xl font-black text-white leading-none">${esc(p.precio_actual)}</span>
+            ${hasOld ? `<span class="text-sm text-slate-500 line-through leading-none mb-0.5">${esc(p.precio_antes)}</span>` : ''}
+          </div>
+          <a href="${esc(p.url)}" target="_blank" rel="noopener sponsored"
+             class="flex items-center justify-center gap-2 w-full bg-amazon hover:bg-amazon-dark active:scale-[.97]
+                    text-black text-sm font-black py-3 px-4 rounded-xl transition-all duration-150
+                    touch-manipulation select-none focus:outline-none focus:ring-2 focus:ring-amazon
+                    focus:ring-offset-2 focus:ring-offset-slate-900">
+            <svg class="w-4 h-4 shrink-0" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59L5.25 14c-.16.28-.25.61-.25.96C5 16.1 5.9 17 7 17h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63H19c.75 0 1.41-.41 1.75-1.03l3.58-6.49A1 1 0 0 0 23.44 4H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/>
+            </svg>
+            ${esc(T.btn_amazon)}
+          </a>
+          <p class="text-[9px] text-slate-700 text-center">${T.asin_label} ${esc(p.asin||p.id)}</p>
+        </div>
+      </article>`;
+  }
+
+  // ───────────────────────────────────────────────────────────────
+  // PLACEHOLDERS PARA TIENDAS NO-AMAZON
+  // Genera 8 tarjetas skeleton con overlay "Próximamente"
+  // ───────────────────────────────────────────────────────────────
+  function buildPlaceholders(containerId, accentColor) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    container.innerHTML = Array.from({ length: 8 }, (_, i) => `
+      <div class="relative bg-slate-900 border border-slate-800/60 rounded-2xl overflow-hidden animate-slide-up"
+           style="animation-delay:${i * 50}ms">
+        <div class="sk aspect-square w-full"></div>
+        <div class="p-4 space-y-3">
+          <div class="sk h-3.5 rounded-lg w-4/5"></div>
+          <div class="sk h-3.5 rounded-lg w-3/5"></div>
+          <div class="sk h-11 rounded-xl w-full mt-2"></div>
+        </div>
+        <!-- Overlay translucido con mensaje -->
+        <div class="absolute inset-0 flex flex-col items-center justify-center
+                    bg-slate-950/80 backdrop-blur-[2px] rounded-2xl p-4">
+          <span class="text-3xl mb-2">🔜</span>
+          <p class="text-sm font-black text-white text-center">${T.store_coming_title}</p>
+          <p class="text-[10px] text-slate-400 text-center mt-0.5">${T.store_coming_sub}</p>
+          <div class="mt-3 h-1 w-12 rounded-full" style="background:${accentColor}"></div>
+        </div>
+      </div>`).join('');
+  }
+
+  // ───────────────────────────────────────────────────────────────
+  // FILTRADO + RENDER DE PRODUCTOS AMAZON
+  // ───────────────────────────────────────────────────────────────
+  function renderProducts() {
+    let list = [...allProducts];
+
+    switch (activeFilter) {
+      case 'top':   list = list.filter(p => (p.descuento_pct||parseInt((p.descuento||'').replace(/\D/g,''))||0) >= 25); break;
+      case 'mega':  list = list.filter(p => (p.descuento_pct||parseInt((p.descuento||'').replace(/\D/g,''))||0) >= 40); break;
+      case 'viral': list = list.filter(p => (p.badge_tipo||'') === 'TENDENCIA VIRAL'); break;
+      case 'gamer': list = list.filter(p => (p.badge_tipo||'') === 'GAMER PICK'); break;
+    }
+
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      list = list.filter(p =>
+        (p.titulo||'').toLowerCase().includes(q) ||
+        (p.asin||'').toLowerCase().includes(q)
+      );
+    }
+
+    $loadingGrid.classList.add('hidden');
+    $error.classList.add('hidden');
+
+    if (list.length === 0) {
+      $grid.classList.add('hidden');
+      $empty.classList.remove('hidden');
+      $count.textContent = '0';
+      return;
+    }
+
+    $empty.classList.add('hidden');
+    $grid.classList.remove('hidden');
+    $grid.innerHTML = list.map((p, i) => renderCard(p, i)).join('');
+    $count.textContent = list.length;
+  }
+
+  // ───────────────────────────────────────────────────────────────
+  // LÓGICA DEL BUSCADOR INTELIGENTE
+  //
+  // Flujo:
+  //   1. Busca coincidencias en allProducts (local JSON)
+  //   2. Si hay → filtra y muestra en el grid
+  //   3. Si NO hay → abre Amazon con el tag de afiliado
+  //      URL: https://www.amazon.com/s?k={encoded}&tag=dawi01-20
+  // ───────────────────────────────────────────────────────────────
+  function buildAmazonSearchURL(query) {
+    return `https://www.amazon.com/s?k=${encodeURIComponent(query)}&tag=${AFFILIATE_TAG}`;
+  }
+
+  function runSearch(query) {
+    const q = query.trim();
+    if (!q) return;
+
+    lastSearchQuery = q;
+    const qLow = q.toLowerCase();
+
+    // Busca en el catálogo local (título + ASIN)
+    const localHits = allProducts.filter(p =>
+      (p.titulo||'').toLowerCase().includes(qLow) ||
+      (p.asin||'').toLowerCase() === qLow
+    );
+
+    if (localHits.length > 0) {
+      // Resultados locales → filtra y muestra
+      searchQuery = q;
+      activeFilter = 'all';
+      $filterBtns.forEach(b => b.classList.remove('active'));
+      document.querySelector('[data-filter="all"]')?.classList.add('active');
+      // Asegurar que el panel Amazon esté visible
+      switchStoreTab('amazon');
+      renderProducts();
+      document.getElementById('ofertas').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else {
+      // Sin resultados locales → redirección a Amazon con afiliado
+      const url = buildAmazonSearchURL(q);
+      showToast(`${T.redirect_toast} "${q}"`);
+      setTimeout(() => window.open(url, '_blank', 'noopener,noreferrer'), 600);
+      // Muestra estado vacío con botón de búsqueda en Amazon
+      searchQuery = q;
+      renderProducts();
+    }
+  }
+
+  // Actualiza el hint "→ Amazon" mientras el usuario escribe
+  function updateSearchHint(query) {
+    if (!query.trim() || !allProducts.length) {
+      $searchHint.classList.add('hidden');
+      return;
+    }
+    const hasLocal = allProducts.some(p =>
+      (p.titulo||'').toLowerCase().includes(query.toLowerCase())
+    );
+    $searchHint.classList.toggle('hidden', hasLocal);
+  }
+
+  // ───────────────────────────────────────────────────────────────
+  // CARGA DE DATOS  (./ofertas.json relativo a AFILIACION/)
+  // ───────────────────────────────────────────────────────────────
+  async function init() {
+    $loadingGrid.classList.remove('hidden');
+    $grid.classList.add('hidden');
+    $error.classList.add('hidden');
+    $empty.classList.add('hidden');
+    $lastUpdate.classList.add('hidden');
+    renderSkeletons(8);
+
+    try {
+      const res = await fetch(JSON_PATH, { cache: 'no-cache' });
+      if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`);
+
+      const data = await res.json();
+      if (!Array.isArray(data.productos)) throw new Error('"productos" no es array en el JSON.');
+
+      allProducts = data.productos;
+
+      if (data.generado_en) {
+        const d    = new Date(data.generado_en);
+        const demo = data.modo === 'demo' ? ` ${T.demo_label}` : '';
+        const loc  = isEN ? 'en-US' : 'es-MX';
+        $lastUpdate.textContent = `${T.updated_label} ${d.toLocaleString(loc,{dateStyle:'long',timeStyle:'short'})}${demo} · tag: ${data.tag||AFFILIATE_TAG}`;
+        $lastUpdate.classList.remove('hidden');
+      }
+
+      renderProducts();
+
+    } catch (err) {
+      $loadingGrid.classList.add('hidden');
+      $errorMsg.innerHTML = `
+        <strong class="text-red-400">${esc(err.message)}</strong><br><br>
+        1. Ejecuta: <code class="bg-slate-800 px-1 rounded">python scraper.py --demo</code><br>
+        2. Abre con <strong>Live Server</strong> (clic derecho en index.html → Open with Live Server)
+      `;
+      $error.classList.remove('hidden');
+      console.error('[OfertasHoy]', err);
+    }
+  }
+
+  // ───────────────────────────────────────────────────────────────
+  // EVENTOS
+  // ───────────────────────────────────────────────────────────────
+
+  // Búsqueda — En keypress Enter
+  $search.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); runSearch($search.value); }
+  });
+
+  // Búsqueda — Clic en botón
+  $searchBtn.addEventListener('click', () => runSearch($search.value));
+
+  // Hint "→ Amazon" en tiempo real mientras escribe (debounced)
+  let hintTimer;
+  $search.addEventListener('input', e => {
+    clearTimeout(hintTimer);
+    hintTimer = setTimeout(() => {
+      searchQuery = e.target.value.trim();
+      updateSearchHint(searchQuery);
+      renderProducts();
+    }, 250);
+  });
+
+  // Botón "Buscar en Amazon" del estado vacío
+  $emptySearchBtn.addEventListener('click', () => {
+    const q = lastSearchQuery || $search.value.trim();
+    if (q) window.open(buildAmazonSearchURL(q), '_blank', 'noopener,noreferrer');
+  });
+
+  // Filter chips
+  $filterBtns.forEach(btn => btn.addEventListener('click', () => {
+    $filterBtns.forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeFilter = btn.dataset.filter;
+    renderProducts();
+  }));
+
+  // ───────────────────────────────────────────────────────────────
+  // TABS DE TIENDAS
+  // ───────────────────────────────────────────────────────────────
+  const STORE_PANELS = {
+    amazon:     'panel-amazon',
+    aliexpress: 'panel-aliexpress',
+    ebay:       'panel-ebay',
+    ml:         'panel-ml',
+  };
+
+  function switchStoreTab(store) {
+    document.querySelectorAll('.store-tab').forEach(t => t.classList.remove('active'));
+    const tab = document.querySelector(`[data-store="${store}"]`);
+    if (tab) tab.classList.add('active');
+
+    Object.values(STORE_PANELS).forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.classList.toggle('hidden', id !== STORE_PANELS[store]);
+    });
+  }
+
+  document.querySelectorAll('.store-tab').forEach(tab => {
+    tab.addEventListener('click', () => switchStoreTab(tab.dataset.store));
+  });
+
+  // ───────────────────────────────────────────────────────────────
+  // TABS DE PINES VIRTUALES
+  // ───────────────────────────────────────────────────────────────
+  document.querySelectorAll('.pin-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      const target = tab.dataset.pinTab;
+      document.querySelectorAll('.pin-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      document.querySelectorAll('.pin-panel').forEach(p => {
+        p.classList.toggle('hidden', p.id !== `tab-${target}`);
+      });
+    });
+  });
+
+  // ───────────────────────────────────────────────────────────────
+  // INICIALIZACIÓN
+  // ───────────────────────────────────────────────────────────────
+  applyI18n();
+  buildPlaceholders('aliPlaceholders', '#FF6A00');
+  buildPlaceholders('ebayPlaceholders', '#E53238');
+  buildPlaceholders('mlPlaceholders',  '#FFE600');
+  init();
+
+})();
+</script>
+
+</body>
+</html>
