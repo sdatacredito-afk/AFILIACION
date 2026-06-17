@@ -87,6 +87,18 @@
     /* Section divider */
     .divider-gradient{background:linear-gradient(90deg,transparent,rgba(255,153,0,.3),transparent)}
 
+    /* Intent banner */
+    .intent-banner{transition:opacity .35s ease,transform .35s ease}
+    .intent-badge{display:inline-flex;align-items:center;gap:6px;font-size:10px;font-weight:800;
+                  letter-spacing:.08em;text-transform:uppercase;padding:4px 12px;border-radius:9999px;
+                  animation:urgencyPulse 1.6s ease-in-out infinite}
+    @keyframes urgencyPulse{0%,100%{box-shadow:0 0 0 0 rgba(255,153,0,.5)}60%{box-shadow:0 0 0 10px rgba(255,153,0,0)}}
+    .intent-cta{display:inline-flex;align-items:center;gap:8px;font-weight:800;font-size:.85rem;
+                padding:.75rem 1.75rem;border-radius:.875rem;border:none;cursor:pointer;
+                transition:transform .15s ease,filter .15s ease;-webkit-tap-highlight-color:transparent}
+    .intent-cta:hover{filter:brightness(1.12)}
+    .intent-cta:active{transform:scale(.96)}
+
     /* Search hint badge */
     #searchHint{font-size:10px;font-weight:700;white-space:nowrap}
 
@@ -285,6 +297,36 @@
           </div>
           <span class="ml-auto text-xs bg-amazon text-black font-bold px-2.5 py-1 rounded-full">dawi01-20</span>
         </div>
+
+        <!-- BANNER DE INTENCIÓN DINÁMICA -->
+        <div id="intentBanner" class="hidden intent-banner mb-6 rounded-2xl overflow-hidden relative border"
+             style="min-height:140px">
+          <!-- Fondo degradado (se inyecta por JS) -->
+          <div id="intentBg" class="absolute inset-0" style="z-index:0"></div>
+          <!-- Noise overlay sutil -->
+          <div class="absolute inset-0 opacity-[.04]"
+               style="background-image:url('data:image/svg+xml,%3Csvg width=\'200\' height=\'200\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'n\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'.9\' numOctaves=\'4\'/%3E%3C/filter%3E%3Crect width=\'200\' height=\'200\' filter=\'url(%23n)\'/%3E%3C/svg%3E');z-index:1"></div>
+          <!-- Contenido -->
+          <div class="relative flex flex-col sm:flex-row items-start sm:items-center gap-4 p-5 sm:p-6" style="z-index:2">
+            <!-- Emoji grande -->
+            <span id="intentEmoji" class="text-5xl sm:text-6xl shrink-0 drop-shadow-2xl select-none"></span>
+            <!-- Texto -->
+            <div class="flex-1 min-w-0">
+              <span id="intentBadge" class="intent-badge mb-2 text-black"></span>
+              <h3 id="intentTitle" class="text-xl sm:text-2xl font-black text-white leading-tight mt-1"></h3>
+              <p  id="intentSub"   class="text-sm text-white/70 mt-1 leading-snug"></p>
+            </div>
+            <!-- CTA -->
+            <a id="intentCta" href="#" target="_blank" rel="noopener sponsored"
+               class="intent-cta shrink-0 text-black whitespace-nowrap">
+              <span id="intentCtaText"></span>
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M9 5l7 7-7 7"/>
+              </svg>
+            </a>
+          </div>
+        </div>
+        <!-- /BANNER -->
 
         <!-- Grid de tarjetas Amazon -->
         <div id="amazonSearchCards" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-6"></div>
@@ -847,6 +889,8 @@
     }
 
     $empty.classList.add('hidden');
+    const $ib = document.getElementById('intentBanner');
+    if ($ib) $ib.classList.add('hidden');
     $grid.classList.remove('hidden');
     $grid.innerHTML = list.map((p, i) => renderCard(p, i)).join('');
     $count.textContent = list.length;
@@ -866,6 +910,128 @@
   }
 
   // ───────────────────────────────────────────────────────────────
+  // BANNER DE INTENCIÓN DINÁMICA — detección por palabras clave
+  // ───────────────────────────────────────────────────────────────
+  const INTENT_MAP = [
+    {
+      id: 'oficina',
+      keys: ['escritorio','computador','monitor','silla','teclado','mouse','oficina',
+             'laptop','pc','impresora','webcam','camara','desk','chair','computer','printer'],
+      gradient: 'linear-gradient(135deg,#0f172a 0%,#1e1b4b 55%,#312e81 100%)',
+      border:   '#6366f1',
+      emoji:    '🖥️',
+      badgeEs:  'OFERTA POR TIEMPO LIMITADO', badgeEn: 'LIMITED TIME DEAL',
+      titleEs:  'RENOVACION DE ESPACIOS GAMER',
+      titleEn:  'UPGRADE YOUR WORKSPACE',
+      subEs:    'Hasta 40% OFF en Escritorios Eléctricos, Sillas Gamer y Accesorios de Oficina',
+      subEn:    'Up to 40% OFF on Electric Desks, Gaming Chairs & Office Accessories',
+      ctaEs:    'Ver Escritorios en Amazon', ctaEn: 'Shop Desks on Amazon',
+      search:   'escritorio electrico gaming silla oficina',
+    },
+    {
+      id: 'gaming',
+      keys: ['gaming','gamer','xbox','playstation','ps5','nintendo','switch','rtx','gpu',
+             'gtx','procesador','ram','ssd','nvme','headset','controller','mando'],
+      gradient: 'linear-gradient(135deg,#0f172a 0%,#1a0a2e 55%,#4a1a8a 100%)',
+      border:   '#8b5cf6',
+      emoji:    '🎮',
+      badgeEs:  'STOCK LIMITADO HOY', badgeEn: 'LIMITED STOCK TODAY',
+      titleEs:  'SETUP GAMER COMPLETO AL MEJOR PRECIO',
+      titleEn:  'FULL GAMING SETUP BEST PRICE',
+      subEs:    'GPUs, SSDs, Monitores Gaming y Perifericos con hasta 50% OFF ahora mismo',
+      subEn:    'GPUs, SSDs, Gaming Monitors & Peripherals up to 50% OFF right now',
+      ctaEs:    'Ver Ofertas Gaming', ctaEn: 'Shop Gaming Deals',
+      search:   'gaming setup gamer offer discount',
+    },
+    {
+      id: 'audio',
+      keys: ['audifonos','auriculares','bocina','parlante','speaker','earbuds',
+             'airpods','sonido','headphones','soundbar','subwoofer','bass'],
+      gradient: 'linear-gradient(135deg,#0f172a 0%,#1c1410 55%,#431407 100%)',
+      border:   '#f59e0b',
+      emoji:    '🎧',
+      badgeEs:  'AUDIOFILO PICK DEL DIA', badgeEn: 'AUDIOPHILE PICK TODAY',
+      titleEs:  'SONIDO SIN LIMITES',
+      titleEn:  'UNLIMITED SOUND',
+      subEs:    'Auriculares Premium, Bocinas y Audio Hi-Fi con hasta 45% OFF',
+      subEn:    'Premium Headphones, Speakers & Hi-Fi Audio up to 45% OFF',
+      ctaEs:    'Ver Audio en Amazon', ctaEn: 'Shop Audio on Amazon',
+      search:   'auriculares headphones speaker bluetooth',
+    },
+    {
+      id: 'movil',
+      keys: ['celular','iphone','android','samsung','xiaomi','tablet','ipad',
+             'smartphone','cargador','funda','cable','phone','mobile'],
+      gradient: 'linear-gradient(135deg,#0f172a 0%,#0c1a2e 55%,#1e3a5f 100%)',
+      border:   '#3b82f6',
+      emoji:    '📱',
+      badgeEs:  'OFERTA FLASH HOY', badgeEn: 'FLASH DEAL TODAY',
+      titleEs:  'TECNOLOGIA MOVIL AL INSTANTE',
+      titleEn:  'MOBILE TECH INSTANT DEALS',
+      subEs:    'Smartphones, Tablets y Accesorios con los mejores precios del mercado',
+      subEn:    'Smartphones, Tablets & Accessories at the best market prices',
+      ctaEs:    'Ver Moviles en Amazon', ctaEn: 'Shop Phones on Amazon',
+      search:   'smartphone tablet celular samsung iphone',
+    },
+    {
+      id: 'hogar',
+      keys: ['hogar','cocina','aspiradora','lavadora','nevera','microondas','sofa',
+             'cama','lampara','licuadora','tv','television','cafetera','freidora','home'],
+      gradient: 'linear-gradient(135deg,#0f172a 0%,#042f2e 55%,#065f46 100%)',
+      border:   '#10b981',
+      emoji:    '🏠',
+      badgeEs:  'ENVIO PRIME GRATIS', badgeEn: 'FREE PRIME SHIPPING',
+      titleEs:  'RENUEVA TU HOGAR AHORA',
+      titleEn:  'RENEW YOUR HOME NOW',
+      subEs:    'Electrodomesticos, Decoracion y Confort con descuentos exclusivos Amazon',
+      subEn:    'Appliances, Decor & Comfort with exclusive Amazon discounts',
+      ctaEs:    'Ver Hogar en Amazon', ctaEn: 'Shop Home on Amazon',
+      search:   'electrodomesticos hogar cocina amazon',
+    },
+  ];
+
+  const INTENT_DEFAULT = {
+    gradient: 'linear-gradient(135deg,#0f172a 0%,#1a0800 55%,#3d1a00 100%)',
+    border:   '#FF9900',
+    emoji:    '🔥',
+    badgeEs:  'OFERTAS DEL DIA EN AMAZON', badgeEn: 'AMAZON DEALS OF THE DAY',
+    titleEs:  'LOS MAS VIRALES DE AMAZON',
+    titleEn:  'AMAZON\'S MOST VIRAL PRODUCTS',
+    subEs:    'Productos con hasta 70% OFF con envio rapido a Colombia',
+    subEn:    'Products up to 70% OFF with fast shipping',
+    ctaEs:    'Explorar Todas las Ofertas', ctaEn: 'Explore All Deals',
+    search:   'ofertas del dia amazon electronics',
+  };
+
+  function detectIntent(query) {
+    if (!query) return INTENT_DEFAULT;
+    const q = query.toLowerCase();
+    return INTENT_MAP.find(cat => cat.keys.some(k => q.includes(k))) || INTENT_DEFAULT;
+  }
+
+  function renderIntentBanner(query) {
+    const banner = document.getElementById('intentBanner');
+    if (!banner) return;
+    const d = detectIntent(query);
+
+    document.getElementById('intentBg').style.background     = d.gradient;
+    banner.style.borderColor                                  = d.border;
+    document.getElementById('intentEmoji').textContent        = d.emoji;
+    document.getElementById('intentBadge').textContent        = isEN ? d.badgeEn  : d.badgeEs;
+    document.getElementById('intentBadge').style.background   = d.border;
+    document.getElementById('intentTitle').textContent        = isEN ? d.titleEn  : d.titleEs;
+    document.getElementById('intentSub').textContent          = isEN ? d.subEn    : d.subEs;
+    document.getElementById('intentCtaText').textContent      = isEN ? d.ctaEn    : d.ctaEs;
+    document.getElementById('intentCta').href                 =
+      `https://www.amazon.com/s?k=${encodeURIComponent(d.search)}&tag=${AFFILIATE_TAG}`;
+    document.getElementById('intentCta').style.background     = d.border;
+    document.getElementById('intentCta').style.color          =
+      (d.border === '#FFE600' || d.border === '#FF9900' || d.border === '#f59e0b') ? '#000' : '#fff';
+
+    banner.classList.remove('hidden');
+  }
+
+  // ───────────────────────────────────────────────────────────────
   // TARJETAS DE BÚSQUEDA AMAZON (para cuando no hay resultados locales)
   // ───────────────────────────────────────────────────────────────
   const AMAZON_SEARCH_CARDS = [
@@ -882,6 +1048,7 @@
     const $term  = document.getElementById('emptySearchTerm');
     if ($term) $term.textContent = query.toUpperCase();
     if (!$cards) return;
+    renderIntentBanner(query);
 
     const enc = encodeURIComponent(query);
     $cards.innerHTML = AMAZON_SEARCH_CARDS.map((c, i) => {
