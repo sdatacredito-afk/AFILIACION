@@ -99,6 +99,18 @@
     .intent-cta:hover{filter:brightness(1.12)}
     .intent-cta:active{transform:scale(.96)}
 
+    /* Top promo banner — encima del grid de productos */
+    .urgency-border{animation:urgencyBorder 2.4s ease-in-out infinite}
+    @keyframes urgencyBorder{
+      0%,100%{box-shadow:0 0 0 1px rgba(255,153,0,.22),0 0 20px rgba(255,153,0,.07)}
+      50%    {box-shadow:0 0 0 2px rgba(255,153,0,.65),0 0 36px rgba(255,153,0,.22)}}
+
+    /* Pip parpadeante de urgencia (• rojo) */
+    .promo-pip{display:inline-block;width:7px;height:7px;border-radius:50%;
+               background:#ef4444;flex-shrink:0;
+               animation:pipBlink .85s ease-in-out infinite}
+    @keyframes pipBlink{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.15;transform:scale(.65)}}
+
     /* Search hint badge */
     #searchHint{font-size:10px;font-weight:700;white-space:nowrap}
 
@@ -274,6 +286,50 @@
 
     <!-- Grid / estados -->
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-7">
+
+      <!-- ═══ TOP PROMO BANNER — visible encima del grid en home + búsqueda con resultados ═══ -->
+      <div id="topPromoBanner"
+           class="hidden intent-banner urgency-border mb-6 rounded-2xl overflow-hidden relative border"
+           style="min-height:130px">
+        <!-- Fondo degradado dinámico (inyectado por JS) -->
+        <div id="topBannerBg" class="absolute inset-0" style="z-index:0"></div>
+        <!-- Línea de acento superior (color = borde del intent) -->
+        <div id="topBannerAccent"
+             class="absolute top-0 left-0 right-0 h-[3px]"
+             style="z-index:3"></div>
+        <!-- Noise overlay sutil -->
+        <div class="absolute inset-0 opacity-[.04]"
+             style="background-image:url('data:image/svg+xml,%3Csvg width=\'200\' height=\'200\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'n\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'.9\' numOctaves=\'4\'/%3E%3C/filter%3E%3Crect width=\'200\' height=\'200\' filter=\'url(%23n)\'/%3E%3C/svg%3E');z-index:1"></div>
+        <!-- Contenido del banner -->
+        <div class="relative flex flex-col sm:flex-row items-start sm:items-center gap-4 p-5 sm:p-6"
+             style="z-index:2">
+          <!-- Emoji grande -->
+          <span id="topBannerEmoji"
+                class="text-5xl sm:text-6xl shrink-0 drop-shadow-2xl select-none leading-none"></span>
+          <!-- Texto principal -->
+          <div class="flex-1 min-w-0">
+            <!-- Badge de urgencia con pip parpadeante -->
+            <div class="flex items-center gap-2 mb-1.5">
+              <span class="promo-pip"></span>
+              <span id="topBannerBadge" class="intent-badge"></span>
+            </div>
+            <h3 id="topBannerTitle"
+                class="text-lg sm:text-2xl font-black text-white leading-tight"></h3>
+            <p  id="topBannerSub"
+                class="text-xs sm:text-sm text-white/65 mt-1 leading-snug"></p>
+          </div>
+          <!-- Botón CTA de alta conversión -->
+          <a id="topBannerCta" href="#" target="_blank" rel="noopener sponsored"
+             class="intent-cta shrink-0 whitespace-nowrap self-end sm:self-auto">
+            <span id="topBannerCtaText"></span>
+            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M9 5l7 7-7 7"/>
+            </svg>
+          </a>
+        </div>
+      </div>
+      <!-- /TOP PROMO BANNER -->
+
       <div id="loadingGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5"></div>
 
       <div id="errorState" class="hidden text-center py-24">
@@ -885,6 +941,9 @@
       $grid.classList.add('hidden');
       $empty.classList.remove('hidden');
       $count.textContent = '0';
+      // emptyState tiene su propio intentBanner — ocultamos el top banner
+      const $tb = document.getElementById('topPromoBanner');
+      if ($tb) $tb.classList.add('hidden');
       return;
     }
 
@@ -894,6 +953,8 @@
     $grid.classList.remove('hidden');
     $grid.innerHTML = list.map((p, i) => renderCard(p, i)).join('');
     $count.textContent = list.length;
+    // Actualiza el top banner con la intención actual (genérica si searchQuery='')
+    renderTopBanner(searchQuery);
   }
 
   // ───────────────────────────────────────────────────────────────
@@ -1032,6 +1093,43 @@
   }
 
   // ───────────────────────────────────────────────────────────────
+  // TOP PROMO BANNER — renderiza el banner encima del grid principal
+  // Muestra oferta genérica (query='') o intent-específica (con query)
+  // Se oculta cuando emptyState tiene su propio intentBanner
+  // ───────────────────────────────────────────────────────────────
+  function renderTopBanner(query) {
+    const banner = document.getElementById('topPromoBanner');
+    if (!banner) return;
+    const d      = detectIntent(query);
+    const isDark = ['#FFE600','#FF9900','#f59e0b'].includes(d.border);
+
+    document.getElementById('topBannerBg').style.background    = d.gradient;
+    banner.style.borderColor                                   = d.border;
+
+    const accent = document.getElementById('topBannerAccent');
+    if (accent) accent.style.background =
+      `linear-gradient(90deg,transparent,${d.border},transparent)`;
+
+    document.getElementById('topBannerEmoji').textContent      = d.emoji;
+
+    const badge = document.getElementById('topBannerBadge');
+    badge.textContent      = isEN ? d.badgeEn : d.badgeEs;
+    badge.style.background = d.border;
+    badge.style.color      = isDark ? '#000' : '#fff';
+
+    document.getElementById('topBannerTitle').textContent      = isEN ? d.titleEn  : d.titleEs;
+    document.getElementById('topBannerSub').textContent        = isEN ? d.subEn    : d.subEs;
+    document.getElementById('topBannerCtaText').textContent    = isEN ? d.ctaEn    : d.ctaEs;
+
+    const cta = document.getElementById('topBannerCta');
+    cta.href           = `https://www.amazon.com/s?k=${encodeURIComponent(d.search)}&tag=${AFFILIATE_TAG}`;
+    cta.style.background = d.border;
+    cta.style.color    = isDark ? '#000' : '#fff';
+
+    banner.classList.remove('hidden');
+  }
+
+  // ───────────────────────────────────────────────────────────────
   // TARJETAS DE BÚSQUEDA AMAZON (para cuando no hay resultados locales)
   // ───────────────────────────────────────────────────────────────
   const AMAZON_SEARCH_CARDS = [
@@ -1121,6 +1219,7 @@
     $empty.classList.add('hidden');
     $lastUpdate.classList.add('hidden');
     renderSkeletons(8);
+    renderTopBanner(''); // muestra promo genérica mientras cargan los skeletons
 
     try {
       const res = await fetch(JSON_PATH, { cache: 'no-cache' });
