@@ -271,14 +271,32 @@
         <button onclick="init()" class="bg-amazon hover:bg-amazon-dark text-black font-bold px-7 py-3 rounded-xl transition active:scale-95" data-i18n="retry_btn">Reintentar</button>
       </div>
 
-      <div id="emptyState" class="hidden text-center py-24">
-        <div class="text-6xl mb-5">🔍</div>
-        <h2 class="text-lg font-bold mb-1" data-i18n="empty_title">Sin resultados locales</h2>
-        <p class="text-slate-400 text-sm mb-6" data-i18n="empty_sub">No hay coincidencias en el catálogo local.</p>
-        <button id="emptySearchBtn"
-          class="bg-amazon hover:bg-amazon-dark text-black font-bold px-6 py-3 rounded-xl transition active:scale-95 text-sm">
-          <span data-i18n="search_on_amazon">Buscar en Amazon →</span>
-        </button>
+      <div id="emptyState" class="hidden py-8 px-2">
+        <!-- Cabecera -->
+        <div class="flex items-center gap-3 mb-6">
+          <div class="w-8 h-8 rounded-full bg-amazon/20 flex items-center justify-center shrink-0">
+            <svg class="w-4 h-4 text-amazon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"/>
+            </svg>
+          </div>
+          <div>
+            <p class="text-xs text-slate-400 uppercase tracking-widest font-semibold" data-i18n="amazon_results_label">Resultados en Amazon para</p>
+            <p id="emptySearchTerm" class="text-base font-black text-white"></p>
+          </div>
+          <span class="ml-auto text-xs bg-amazon text-black font-bold px-2.5 py-1 rounded-full">dawi01-20</span>
+        </div>
+
+        <!-- Grid de tarjetas Amazon -->
+        <div id="amazonSearchCards" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-6"></div>
+
+        <!-- Link directo -->
+        <div class="text-center">
+          <button id="emptySearchBtn"
+            class="inline-flex items-center gap-2 bg-slate-800 hover:bg-slate-700 border border-slate-600
+                   text-slate-300 text-xs font-semibold px-5 py-2.5 rounded-xl transition active:scale-95">
+            <span data-i18n="search_on_amazon">Buscar en Amazon →</span>
+          </button>
+        </div>
       </div>
 
       <div id="productGrid" class="hidden grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5"></div>
@@ -561,6 +579,7 @@
       retry_btn:          'Reintentar',
       empty_title:        'Sin resultados locales',
       empty_sub:          'No hay coincidencias en el catálogo local.',
+      amazon_results_label: 'Resultados en Amazon para',
       updated_label:      'Actualizado:',
       demo_label:         '· MODO DEMO',
       pins_title:         'Pines Virtuales',
@@ -611,6 +630,7 @@
       retry_btn:          'Retry',
       empty_title:        'No local results',
       empty_sub:          'No matches found in the local catalog.',
+      amazon_results_label: 'Results on Amazon for',
       updated_label:      'Updated:',
       demo_label:         '· DEMO MODE',
       pins_title:         'Virtual Pins',
@@ -845,6 +865,42 @@
     return `https://www.amazon.com/s?k=${encodeURIComponent(query)}&tag=${AFFILIATE_TAG}`;
   }
 
+  // ───────────────────────────────────────────────────────────────
+  // TARJETAS DE BÚSQUEDA AMAZON (para cuando no hay resultados locales)
+  // ───────────────────────────────────────────────────────────────
+  const AMAZON_SEARCH_CARDS = [
+    { icon:'🔥', labelEs:'Ofertas del Día',   labelEn:'Daily Deals',      sort:'',                          extra:'&rh=p_n_deal_type%3A23566065011', color:'#dc2626' },
+    { icon:'⭐', labelEs:'Más Vendidos',       labelEn:'Best Sellers',     sort:'&s=review-rank',            extra:'', color:'#d97706' },
+    { icon:'💰', labelEs:'Menor Precio',       labelEn:'Lowest Price',     sort:'&s=price-asc-rank',         extra:'', color:'#16a34a' },
+    { icon:'🆕', labelEs:'Más Nuevos',         labelEn:'Newest',           sort:'&s=date-desc-rank',         extra:'', color:'#2563eb' },
+    { icon:'⚡', labelEs:'Envío Rápido',       labelEn:'Fast Shipping',    sort:'',                          extra:'&rh=p_85%3A2470955011', color:'#7c3aed' },
+    { icon:'🛒', labelEs:'Ver Todos',          labelEn:'See All',          sort:'&s=relevanceblender',       extra:'', color:'#FF9900' },
+  ];
+
+  function renderAmazonSearchCards(query) {
+    const $cards = document.getElementById('amazonSearchCards');
+    const $term  = document.getElementById('emptySearchTerm');
+    if ($term) $term.textContent = query.toUpperCase();
+    if (!$cards) return;
+
+    const enc = encodeURIComponent(query);
+    $cards.innerHTML = AMAZON_SEARCH_CARDS.map((c, i) => {
+      const label = isEN ? c.labelEn : c.labelEs;
+      const url   = `https://www.amazon.com/s?k=${enc}${c.sort}${c.extra}&tag=${AFFILIATE_TAG}`;
+      return `
+        <a href="${url}" target="_blank" rel="noopener sponsored"
+           class="group flex flex-col items-center gap-2.5 p-4 rounded-2xl border border-slate-800
+                  bg-slate-900 hover:border-slate-600 hover:bg-slate-800 transition-all duration-200
+                  animate-slide-up active:scale-95 text-center"
+           style="animation-delay:${i*60}ms">
+          <span class="text-3xl group-hover:scale-110 transition-transform duration-200">${c.icon}</span>
+          <span class="text-xs font-bold text-slate-200 leading-tight">${esc(label)}</span>
+          <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full text-white"
+                style="background:${c.color}">Amazon →</span>
+        </a>`;
+    }).join('');
+  }
+
   function runSearch(query) {
     const q = query.trim();
     if (!q) return;
@@ -864,18 +920,15 @@
       activeFilter = 'all';
       $filterBtns.forEach(b => b.classList.remove('active'));
       document.querySelector('[data-filter="all"]')?.classList.add('active');
-      // Asegurar que el panel Amazon esté visible
       switchStoreTab('amazon');
       renderProducts();
       document.getElementById('ofertas').scrollIntoView({ behavior: 'smooth', block: 'start' });
     } else {
-      // Sin resultados locales → redirección a Amazon con afiliado
-      const url = buildAmazonSearchURL(q);
-      showToast(`${T.redirect_toast} "${q}"`);
-      setTimeout(() => window.open(url, '_blank', 'noopener,noreferrer'), 600);
-      // Muestra estado vacío con botón de búsqueda en Amazon
+      // Sin resultados locales → muestra tarjetas de Amazon
       searchQuery = q;
       renderProducts();
+      renderAmazonSearchCards(q);
+      document.getElementById('ofertas').scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   }
 
