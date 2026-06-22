@@ -238,6 +238,15 @@
         <span data-i18n="store_amazon">Amazon</span>
       </button>
 
+      <button data-store="rakuten"
+        class="store-tab shrink-0 flex items-center gap-2
+               text-xs px-4 py-2.5 rounded-xl border border-slate-700 text-slate-300
+               hover:border-purple-400 hover:text-purple-400 transition">
+        <span class="text-sm leading-none">🟣</span>
+        <span>Rakuten</span>
+        <span class="text-[9px] bg-slate-700 px-1.5 py-0.5 rounded-full font-bold">Beta</span>
+      </button>
+
       <button data-store="aliexpress"
         class="store-tab shrink-0 flex items-center gap-2
                text-xs px-4 py-2.5 rounded-xl border border-slate-700 text-slate-300
@@ -402,6 +411,38 @@
     </main>
 
   </div><!-- /panel-amazon -->
+
+  <!-- ══════════════════════════════════════════════════
+       PANEL RAKUTEN — Integración (Beta)
+  ══════════════════════════════════════════════════ -->
+  <div id="panel-rakuten" class="store-panel hidden">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div class="flex items-center gap-3 mb-6 p-4 rounded-2xl border border-purple-400/30 bg-purple-400/5">
+        <span class="text-3xl">🟣</span>
+        <div>
+          <p class="font-black text-base text-purple-400">Rakuten</p>
+          <p class="text-xs text-slate-400">Integración Beta con Rakuten Advertising. Conecta tu MID y credenciales en el backend para mostrar productos reales.</p>
+        </div>
+      </div>
+
+      <!-- Notificación explorando catálogo -->
+      <div id="rakutenNotice" class="mb-6 p-4 rounded-lg bg-purple-900/30 border border-purple-700 text-purple-100 hidden">
+        Explorando catálogo global de Rakuten
+      </div>
+
+      <!-- Grid de productos Rakuten (placeholders por ahora) -->
+      <div id="rakutenGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+        <!-- Placeholders iniciales -->
+        <div class="bg-slate-900 border border-slate-800/60 rounded-2xl overflow-hidden p-4"> 
+          <div class="sk aspect-square w-full mb-3"></div>
+          <div class="sk h-3.5 rounded-lg w-4/5 mb-2"></div>
+          <div class="sk h-3.5 rounded-lg w-3/5 mb-2"></div>
+          <div class="sk h-11 rounded-xl w-full mt-3"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
 
   <!-- ══════════════════════════════════════════════════
        PANEL ALIEXPRESS — Placeholder
@@ -627,6 +668,7 @@
      JAVASCRIPT PRINCIPAL
      Orden de ejecucion: i18n → placeholders → init() → eventos
 ═══════════════════════════════════════════════════════════════ -->
+<script src="./rakuten_search.js"></script>
 <script>
 (() => {
   'use strict';
@@ -882,6 +924,43 @@
             ${esc(T.btn_amazon)}
           </a>
           <p class="text-[9px] text-slate-700 text-center">${T.asin_label} ${esc(p.asin||p.id)}</p>
+        </div>
+      </article>`;
+  }
+
+  // Render simplificado para resultados Rakuten (adaptable)
+  function renderRakutenCard(p, idx) {
+    const title = p.titulo || p.title || 'Producto Rakuten';
+    const price = p.precio_actual || p.price || '$0.00';
+    const old   = p.precio_antes || p.list_price || '';
+    const img   = p.imagen || p.image || 'https://placehold.co/400x400/261A3A/7c3aed?text=Rakuten';
+    const url   = p.url || p.affiliate_url || '#';
+
+    const delay = Math.min(idx * 40, 350);
+
+    return `
+      <article class="card group bg-slate-900 border border-slate-800/60 rounded-2xl overflow-hidden flex flex-col animate-slide-up"
+               style="animation-delay:${delay}ms">
+
+        <a href="${esc(url)}" target="_blank" rel="noopener sponsored"
+           class="relative block bg-white aspect-square overflow-hidden shrink-0">
+          <img src="${esc(img)}" alt="${esc(title)}"
+               class="w-full h-full object-contain p-4 group-hover:scale-[1.06] transition-transform duration-300"
+               loading="lazy"
+               onerror="this.onerror=null;this.src='https://placehold.co/400x400/1e293b/475569?text=Rakuten'"/>
+        </a>
+
+        <div class="p-4 flex flex-col flex-1 gap-2.5">
+          <h2 class="text-sm font-semibold leading-snug line-clamp-2 text-slate-100 min-h-[2.6rem] flex-1">${esc(title)}</h2>
+          <div class="flex items-end gap-2 flex-wrap mt-auto">
+            <span class="text-2xl font-black text-white leading-none">${esc(price)}</span>
+            ${old ? `<span class="text-sm text-slate-500 line-through leading-none mb-0.5">${esc(old)}</span>` : ''}
+          </div>
+          <a href="${esc(url)}" target="_blank" rel="noopener sponsored"
+             class="flex items-center justify-center gap-2 w-full bg-purple-400 hover:bg-purple-500 active:scale-[.97]
+                    text-black text-sm font-black py-3 px-4 rounded-xl transition-all duration-150">
+            Ver en Rakuten
+          </a>
         </div>
       </article>`;
   }
@@ -1166,14 +1245,38 @@
     }).join('');
   }
 
-  function runSearch(query) {
-    const q = query.trim();
+  async function runSearch(query) {
+    const q = (query||'').trim();
     if (!q) return;
 
     lastSearchQuery = q;
     const qLow = q.toLowerCase();
 
-    // Busca en el catálogo local (título + ASIN)
+    // Si la pestaña actual es Rakuten, realizar búsqueda en Rakuten
+    if (currentStore === 'rakuten') {
+      switchStoreTab('rakuten');
+      const notice = document.getElementById('rakutenNotice');
+      const grid   = document.getElementById('rakutenGrid');
+      if (notice) notice.classList.remove('hidden');
+      if (grid) grid.innerHTML = '<div class="text-center py-8 text-slate-400">Explorando catálogo global de Rakuten…</div>';
+
+      try {
+        const results = window.searchRakuten ? await window.searchRakuten(q) : [];
+        if (!results || results.length === 0) {
+          if (grid) grid.innerHTML = `<div class="text-center py-12"><p class="text-slate-400">No se encontraron resultados en Rakuten para "${esc(q)}"</p></div>`;
+        } else {
+          if (notice) notice.classList.add('hidden');
+          if (grid) grid.innerHTML = results.map((p,i) => renderRakutenCard(p,i)).join('');
+        }
+      } catch (err) {
+        if (grid) grid.innerHTML = `<div class="text-center py-8 text-red-400">Error consultando Rakuten: ${esc(err.message||String(err))}</div>`;
+      }
+
+      document.getElementById('ofertas').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      return;
+    }
+
+    // Busca en el catálogo local (título + ASIN) — comportamiento por defecto (Amazon local)
     const localHits = allProducts.filter(p =>
       (p.titulo||'').toLowerCase().includes(qLow) ||
       (p.asin||'').toLowerCase() === qLow
@@ -1294,12 +1397,17 @@
   // ───────────────────────────────────────────────────────────────
   const STORE_PANELS = {
     amazon:     'panel-amazon',
+    rakuten:    'panel-rakuten',
     aliexpress: 'panel-aliexpress',
     ebay:       'panel-ebay',
     ml:         'panel-ml',
   };
 
+  // estado actual de la tienda seleccionada
+  let currentStore = 'amazon';
+
   function switchStoreTab(store) {
+    currentStore = store;
     document.querySelectorAll('.store-tab').forEach(t => t.classList.remove('active'));
     const tab = document.querySelector(`[data-store="${store}"]`);
     if (tab) tab.classList.add('active');
@@ -1308,6 +1416,10 @@
       const el = document.getElementById(id);
       if (el) el.classList.toggle('hidden', id !== STORE_PANELS[store]);
     });
+
+    // ocultar/mostrar elementos relacionados
+    const $tb = document.getElementById('topPromoBanner');
+    if ($tb) $tb.classList.toggle('hidden', store !== 'amazon');
   }
 
   document.querySelectorAll('.store-tab').forEach(tab => {

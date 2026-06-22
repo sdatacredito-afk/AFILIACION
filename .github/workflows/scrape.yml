@@ -1,0 +1,50 @@
+name: Scrape and publish ofertas.json
+
+on:
+  schedule:
+    - cron: '0 12 * * *'  # daily at 12:00 UTC
+  workflow_dispatch: {}
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
+
+      - name: Run scraper (demo by default)
+        env:
+          SCRAPE_REAL: ${{ secrets.SCRAPE_REAL }}
+        run: |
+          if [ "$SCRAPE_REAL" = "true" ]; then
+            python scraper.py
+          else
+            python scraper.py --demo
+          fi
+
+      - name: Upload ofertas.json
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ofertas-json
+          path: ofertas.json

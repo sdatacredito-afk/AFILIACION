@@ -1,0 +1,15 @@
+__pycache__/
+.venv/
+venv/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+dist/
+build/
+*.log
+.DS_Store
+/.vscode/
+ofertas.json
+*.png
+screenshot_*.png
